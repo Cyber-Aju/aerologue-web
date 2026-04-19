@@ -779,7 +779,7 @@
 
             .tab-navigation {
                 width: 100%;
-                flex-direction: row;
+                flex-direction: column;
                 max-height: none;
                 border-radius: 20px 20px 0 0;
             }
@@ -2377,22 +2377,14 @@
                                 <textarea class="notes-field" id="notes_${index}" placeholder="Add any additional notes...">${task.notes || ''}</textarea>
                             </div>
 
-                            <div class="form-group">
-                                <label>📎 Attachment (Optional)</label>
-                                <div class="file-upload-container">
-                                    <input type="file" id="file_input_${index}">
-                                    <span id="upload_status_${index}" class="upload-status"></span>
-                                </div>
-                            </div>
+                            
 
                             <div class="form-group">
                                 <label for="issue_select_${index}">
                                     <span>🔗 Link to Redmine Issue</span>
                                     
                                     <div style="display:flex; align-items:center; gap: 10px;">
-                                        <button type="button" class="manual-toggle-btn" style="color: #1baca5; border: 1px solid #1baca5; padding: 3px 8px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; gap: 4px;" onclick="openCreateTicketModal(${index})">
-                                            <span>➕</span> Create New Ticket
-                                        </button>
+                                        
                                         <button type="button" class="manual-toggle-btn" id="toggle_to_manual_${index}">Enter ID Manually</button>
                                         <span class="refresh-icon" id="refresh_issues_${index}" title="Refresh Issue List">🔄</span>
                                     </div>
@@ -2571,14 +2563,7 @@
                             <textarea class="notes-field" id="notes_${index}" placeholder="Add any additional notes..."></textarea>
                         </div>
 
-                        <div class="form-group">
-                            <label>📎 Attachment (Optional)</label>
-                            <div class="file-upload-container">
-                                <input type="file" id="file_input_${index}">
-                                <span id="upload_status_${index}" class="upload-status"></span>
-                            </div>
-                        </div>
-
+                        
                         <div class="form-group">
                             <label for="issue_select_${index}">
                                 <span>🔗 Link to Redmine Issue</span>
