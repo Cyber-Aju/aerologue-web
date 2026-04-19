@@ -1465,6 +1465,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxmqV1zKwGmtFowzGbnPY4-PHnFOiBxzP5BYifMZsnQRUuXZuznAoqzQAq7C_v7dvj5/exec";
         const activitiesList = ["Email", "Analysis", "Analysis Documentation", "Automation Testing", "Bug Fixing", "Coding", "Code Review", "Code Review Feeback Fixes", "Code Integration", "Client Call", "Database activity", "Daily Stand up Meeting", "Document Review", "Demo", "Manual Testing", "Load Testing", "Mobile Testing", "Manual Regression testing", "Performance Testing", "Project Management", "R&D", "Requirement Analysis", "Brainstorming", "Sprint planing", "Sprint Review", "Sprint Retrospective", "Team Meeting", "Technical Document", "User stories Creation", "User stories Refinement", "Unit testing", "Usability Testing", "Test Case Preparation", "Smoke Testing", "Live Support", "Html conversion", "Responsive implementation", "Training", "Documentation", "Team Assistance", "K.T (Handover)", "Infra support", "Recuirtment", "Monthly Review Meetings", "security Testing", "Managers Meeting", "Hackathon", "Desktop Support", "Vendor Support", "Server Support", "UX Process", "UI Design", "Design Testing", "RFP Support", "redmine setup", "Security fixing", "Internal Communication", "Tracking", "Optimisation work", "Mentoring", "Temp Fix", "Troubleshoot", "Issues Found", "Design Review", "Impact Analysis", "Follow up", "Webinar", "Affected case analysis", "feedback", "Appraisal Meeting", "Employee Engagement", "Networking", "Page /Blog Publish", "Content Creation", "Learning", "Training"];
@@ -2817,7 +2818,11 @@
             const notesCheckbox = document.getElementById(`notes_toggle_${index}`);
             let notesToSend = "";
             if (notesCheckbox && notesCheckbox.checked) {
-                notesToSend = getValue(`notes_${index}`);
+                const rawNotes = getValue(`notes_${index}`);
+                if (rawNotes.trim() !== '') {
+                    // This mimics Parsedown by converting Markdown to HTML!
+                    notesToSend = marked.parse(rawNotes);
+                }
             }
 
             // Lookup Activity ID
