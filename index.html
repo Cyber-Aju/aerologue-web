@@ -1992,7 +1992,6 @@
 
         function fetchIssues(isRetry = false, retryBtnId = null) {
             const apiKey = document.getElementById('remoteApiKey').value.trim();
-            // Do not fetch if the API key isn't entered yet
             if (!apiKey) return;
 
             const btn = retryBtnId ? document.getElementById(retryBtnId) : null;
@@ -2006,11 +2005,22 @@
                     if (data.error) {
                         showError("Failed to fetch issues: " + data.error);
                     } else {
-                        redmineIssues = data;
-                        // Refresh all dropdowns present on the screen
-                        tasks.forEach((_, index) => {
-                            populateCustomOptions(index);
+                        let combined = [];
+                        // Process Assigned Issues
+                        (data.assigned || []).forEach(issue => {
+                            issue.group = 'Assigned';
+                            issue.displayStatus = `Assigned - ${issue.status.name}`;
+                            combined.push(issue);
                         });
+                        // Process Project Issues
+                        (data.project || []).forEach(issue => {
+                            issue.group = 'Project';
+                            issue.displayStatus = `Project - ${issue.status.name}`;
+                            combined.push(issue);
+                        });
+
+                        redmineIssues = combined;
+                        updateDropdownsAfterFetch();
                     }
                     if (btn) setTimeout(() => btn.classList.remove('spinning'), 500);
                 })
@@ -2019,6 +2029,26 @@
                     showError('Failed to load Redmine issues');
                     if (btn) btn.classList.remove('spinning');
                 });
+        }
+
+        // --- NEW HELPER TO REFRESH DROPDOWNS ---
+        function updateDropdownsAfterFetch() {
+            tasks.forEach((_, index) => {
+                const statusFilter = document.getElementById(`status_filter_${index}`);
+                if (statusFilter) {
+                    const uniqueStatuses = [...new Set(redmineIssues.map(i => i.displayStatus))].sort();
+                    const currentVal = statusFilter.value; // Preserve user's current selection
+                    statusFilter.innerHTML = '<option value="">All</option>';
+                    uniqueStatuses.forEach(status => {
+                        const option = document.createElement('option');
+                        option.value = status;
+                        option.textContent = status;
+                        if (status === currentVal) option.selected = true;
+                        statusFilter.appendChild(option);
+                    });
+                }
+                populateCustomOptions(index);
+            });
         }
 
         // Initial Call
@@ -2037,18 +2067,23 @@
 
             optionsList.innerHTML = '';
 
-            // Filter issues based on BOTH Search Text AND Status
             const filteredIssues = redmineIssues.filter(issue => {
                 const matchesSearch = issue.subject.toLowerCase().includes(searchText) || issue.id.toString().includes(searchText);
-                const matchesStatus = statusValue === "" || issue.status.name === statusValue;
+                const matchesStatus = statusValue === "" || issue.displayStatus === statusValue;
                 return matchesSearch && matchesStatus;
             });
 
             filteredIssues.forEach(issue => {
                 const div = document.createElement('div');
                 div.className = 'custom-option';
-                // Display Status in the list item for clarity
-                div.innerHTML = `<b>#${issue.id}</b> - ${issue.subject} <span style="font-size:0.75em; color:#666; float:right;">(${issue.status.name})</span>`;
+
+                // Blue badge for Assigned, Purple badge for Project
+                const badgeColor = issue.group === 'Assigned' ? '#3182ce' : '#805ad5';
+
+                div.innerHTML = `<b>#${issue.id}</b> - ${issue.subject} 
+                    <span style="font-size:0.75em; color:#fff; background:${badgeColor}; padding:3px 8px; border-radius:12px; float:right; font-weight:600;">
+                        ${issue.group}: ${issue.status.name}
+                    </span>`;
                 div.dataset.value = issue.id;
 
                 div.addEventListener('click', function () {
@@ -2093,10 +2128,9 @@
             const trigger = document.getElementById(`trigger_${index}`);
             const searchInput = document.getElementById(`search_input_${index}`);
             const statusFilter = document.getElementById(`status_filter_${index}`);
-            const optionsList = document.getElementById(`options_list_${index}`);
 
-            // 1. Populate Status Filter Dropdown dynamically based on fetched issues
-            const uniqueStatuses = [...new Set(redmineIssues.map(i => i.status.name))].sort();
+            // Populate Status Filter
+            const uniqueStatuses = [...new Set(redmineIssues.map(i => i.displayStatus))].sort();
             statusFilter.innerHTML = '<option value="">All</option>';
             uniqueStatuses.forEach(status => {
                 const option = document.createElement('option');
@@ -2105,7 +2139,6 @@
                 statusFilter.appendChild(option);
             });
 
-            // 2. Populate Options List
             populateCustomOptions(index);
 
             // Toggle Dropdown
@@ -2114,25 +2147,16 @@
                 document.querySelectorAll('.custom-select-wrapper').forEach(el => {
                     if (el !== wrapper) el.classList.remove('open');
                 });
-
                 wrapper.classList.toggle('open');
-
                 if (wrapper.classList.contains('open')) {
                     searchInput.value = '';
-                    statusFilter.value = ''; // Optional: Reset status filter on open? Or keep it?
-                    // Let's keep the filter reset logic for clean interaction:
                     populateCustomOptions(index);
                     searchInput.focus();
                 }
             });
 
-            // 3. Search Listener
             searchInput.addEventListener('input', () => populateCustomOptions(index));
-
-            // 4. NEW: Status Filter Listener
             statusFilter.addEventListener('change', () => populateCustomOptions(index));
-
-            // Prevent clicks inside search/filter from closing dropdown
             searchInput.addEventListener('click', (e) => e.stopPropagation());
             statusFilter.addEventListener('click', (e) => e.stopPropagation());
         }
